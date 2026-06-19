@@ -75,7 +75,37 @@ export default function ActualitesPage() {
 
               <button className="mt-3 w-full bg-black text-white py-2 rounded">
                 S’inscrire
-              </button>
+              <button
+  className="mt-3 w-full bg-black text-white py-2 rounded"
+  onClick={async () => {
+    try {
+      const res = await fetch(
+        `/api/events/${event.id}/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: 1, // TEMPORAIRE (on branchera Clerk après)
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error);
+      } else {
+        alert("Inscription réussie !");
+      }
+    } catch (err) {
+      alert("Erreur réseau");
+    }
+  }}
+>
+  S’inscrire
+</button>
             </div>
           );
         })}
