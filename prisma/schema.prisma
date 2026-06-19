@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADHERENT
+  ENCADRANT
+  RESPONSABLE_LUDOTHEQUE
+  ADMINISTRATEUR
+}
+
+enum EventStatus {
+  PROCHAINEMENT
+  OUVERT
+  COMPLET
+  INSCRIPTIONS_TERMINEES
+  TERMINE
+  ARCHIVE
+}
+
+enum RegistrationStatus {
+  PRE_INSCRIT
+  VALIDE
+  REFUSE
+  LISTE_ATTENTE
+}
+
+enum GameStatus {
+  DISPONIBLE
+  EMPRUNTE
+  EMPRUNTE_FOYER
+  MAINTENANCE
+}
+
+enum NotificationType {
+  NEW_EVENT
+  EVENT_VALIDATED
+  EVENT_REFUSED
+  EVENT_CANCELLED
+  LOAN_CREATED
+  LOAN_EXTENDED
+  LOAN_RETURNED
+  LOAN_REMINDER
+  GAME_PROBLEM
+}
+model User {
+
+  id                 Int       @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  username           String    @unique
+  email              String    @unique
+  password           String
+
+  role               UserRole
+
+  isBenevole         Boolean   @default(false)
+
+  mustChangePassword Boolean   @default(true)
+
+  photoUrl           String?
+
+  qrCode             String
+
+  emailNotifications Boolean   @default(true)
+  siteNotifications  Boolean   @default(true)
+  soundNotifications Boolean   @default(false)
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  loans              Loan[]
+  registrations      EventRegistration[]
+  notifications      Notification[]
+
+}
+model Event {
+
+  id                   Int @id @default(autoincrement())
+
+  title                String
+
+  description          String
+
+  imageUrl             String?
+
+  price                Float
+
+  maxParticipants      Int
+
+  eventDate            DateTime
+
+  registrationOpensAt  DateTime
+
+  registrationClosesAt DateTime
+
+  status               EventStatus
+
+  notifyByEmail        Boolean @default(true)
+
+  createdAt            DateTime @default(now())
+
+  createdByUserId      Int?
+
+  registrations        EventRegistration[]
+
+}
+model EventRegistration {
+
+  id                 Int @id @default(autoincrement())
+
+  eventId            Int
+
+  userId             Int?
+
+  status             RegistrationStatus
+
+  validatedAt        DateTime?
+
+  validatedByUserId  Int?
+
+  attendedAt         DateTime?
+
+  checkedInByUserId  Int?
+
+  createdAt          DateTime @default(now())
+
+  event Event @relation(
+    fields: [eventId],
+    references: [id]
+  )
+
+  user User? @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+}
+model Game {
+
+  id           Int @id @default(autoincrement())
+
+  name         String
+
+  description  String
+
+  imageUrl     String?
+
+  barcode      String @unique
+
+  status       GameStatus @default(DISPONIBLE)
+
+  createdAt    DateTime @default(now())
+
+  updatedAt    DateTime @updatedAt
+
+  loans        Loan[]
+
+  problems     Problem[]
+
+  maintenances Maintenance[]
+
+}
+model Loan {
+
+  id            Int @id @default(autoincrement())
+
+  gameId         Int
+
+  userId         Int?
+
+  isFoyerLoan    Boolean @default(false)
+
+  borrowedAt     DateTime
+
+  returnDate     DateTime
+
+  returnedAt     DateTime?
+
+  extended       Boolean @default(false)
+
+  game Game @relation(
+    fields:[gameId],
+    references:[id]
+  )
+
+  user User? @relation(
+    fields:[userId],
+    references:[id],
+    onDelete:SetNull
+  )
+
+}
+model Problem {
+
+  id          Int @id @default(autoincrement())
+
+  loanId      Int
+
+  description String
+
+  createdAt   DateTime @default(now())
+
+  resolvedAt  DateTime?
+
+  gameId       Int
+
+  game Game @relation(
+    fields:[gameId],
+    references:[id]
+  )
+
+}
+model Maintenance {
+
+  id         Int @id @default(autoincrement())
+
+  gameId     Int
+
+  reason     String
+
+  createdAt  DateTime @default(now())
+
+  resolvedAt DateTime?
+
+  game Game @relation(
+    fields:[gameId],
+    references:[id]
+  )
+
+}
+model Notification {
+
+  id        Int @id @default(autoincrement())
+
+  userId    Int?
+
+  title     String
+
+  message   String
+
+  type      NotificationType
+
+  read      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(
+    fields:[userId],
+    references:[id],
+    onDelete:SetNull
+  )
+
+}
+model AuditLog {
+
+  id        Int @id @default(autoincrement())
+
+  userId    Int?
+
+  action    String
+
+  entity    String
+
+  entityId  Int?
+
+  createdAt DateTime @default(now())
+
+}
+model SiteMaintenance {
+
+  id      Int @id @default(1)
+
+  enabled Boolean @default(false)
+
+}
+model AnnualGameStat {
+
+  id               Int @id @default(autoincrement())
+
+  year             Int
+
+  gameName         String
+
+  borrowCount      Int
+
+  problemCount     Int
+
+  maintenanceCount Int
+
+}
