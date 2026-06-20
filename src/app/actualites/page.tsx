@@ -86,9 +86,7 @@ export default function ActualitesPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            userId: 1, // TEMPORAIRE (on branchera Clerk après)
-          }),
+          body: JSON.stringify({})
         }
       );
 
