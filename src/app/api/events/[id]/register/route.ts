@@ -9,9 +9,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const body = await req.json();
-
-    const userId = body.userId;
+    const userId = await getCurrentUserId();
 
     const registration = await registerToEvent(
       Number(params.id),
@@ -26,3 +24,4 @@ export async function POST(
     );
   }
 }
+import { getCurrentUserId } from "@/lib/auth";
